@@ -7,8 +7,9 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using Microsoft.Bot.Connector;
 using Newtonsoft.Json;
+using System.Xml;
 
-namespace AshleyBot
+namespace CampsiteBot
 {
     [BotAuthentication]
     public class MessagesController : ApiController
@@ -22,12 +23,22 @@ namespace AshleyBot
             if (activity.Type == ActivityTypes.Message)
             {
                 ConnectorClient connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                // calculate something for us to return
+                // get state code
                 int length = (activity.Text ?? string.Empty).Length;
 
-                // return our reply to the user
-                Activity reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
-                await connector.Conversations.ReplyToActivityAsync(reply);
+                if (length == 2)
+                {
+                    string stateCode = (activity.Text ?? string.Empty);
+                    Activity reply = activity.CreateReply($"Looking for campsites in {stateCode}" );
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+                }
+                else
+                {
+                    Activity reply = activity.CreateReply($"Im sorry but I can't find that state. Please use the two letter state code. Example: Colorado = CO.");
+                    await connector.Conversations.ReplyToActivityAsync(reply);
+
+                }
+
             }
             else
             {
@@ -65,5 +76,29 @@ namespace AshleyBot
 
             return null;
         }
+
+       /* static public string ProcessResponse(response)
+        {
+            //Create namespace manager
+            XmlNamespaceManager nsmgr = new XmlNamespaceManager(response.NameTable);
+            nsmgr.AddNamespace("rest", "http://schemas.microsoft.com/search/local/ws/rest/v1");
+
+            //Get all facilities in the state
+            XmlNodeList locationElements = response.SelectNodes("//rest:facilityName", nsmgr);
+            foreach (XmlNode location in locationElements)
+            {
+                string facility = location.InnerText;
+                string campsites = facility;
+                return campsites;
+            }
+
+            if (campsites = null)
+            {
+
+            }
+
+        }*/
     }
+
+
 }
